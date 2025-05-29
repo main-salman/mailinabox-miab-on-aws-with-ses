@@ -1,0 +1,21 @@
+# Example terraform.tfvars for Mail-in-a-Box + SES
+
+# Required variables
+aws_region = "us-east-1" # AWS region to deploy resources
+
+domain_name = "example.com" # Your main domain name (for email addresses like me@example.com)
+mail_subdomain = "mail.example.com" # Subdomain for mail server hostname (e.g., mail.example.com)
+environment = "prod" # Environment name (e.g., dev, staging, prod)
+ssh_key_name = "your-ssh-key-name" # Name of your AWS EC2 SSH key pair
+admin_email = "admin@example.com" # Admin email address
+
+# Optional variables
+backup_retention_days = 90 # Number of days to retain backups (default: 90)
+instance_type = "t3.small" # EC2 instance type (default: t3.small)
+volume_size = 50 # EBS volume size in GB (default: 50)
+
+tags = {
+  Project     = "mail-server"
+  Environment = "prod"
+  ManagedBy   = "terraform"
+} 

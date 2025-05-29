@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+.terraform.lock.hcl
+terraform.tfvars
+
+# Shell history and sensitive files
+*.pem
+*.key
+*.env
+.env*
+
+# AWS credentials
+.aws/
+
+# Editor and system files
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+*.bak
+*~ 

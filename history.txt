@@ -1,0 +1,109 @@
+# Project History
+
+## 2024-03-21
+- Initial review of configuration
+- Found variables.tf with following key configurations:
+  - AWS Region: us-east-1
+  - Domain: qolimpact.click
+  - Mail Subdomain: mail.qolimpact.click
+  - Environment: prod
+  - Instance: t4g.micro with 10GB volume
+  - Backup retention: 90 days
+  - Admin email: salman.naqvi@gmail.com
+
+- Found outputs.tf exposing:
+  - Mail server EIP
+  - Mail server domain
+  - Backup S3 bucket
+  - Storage S3 bucket
+  - SES verification token
+  - DKIM tokens 
+
+- Converted AWS CloudFormation template to Terraform:
+  - Created ec2.tf for EC2 instance and security group configuration
+  - Created templates/user_data.sh.tpl for instance initialization
+  - Configured security group with required ports (25, 587, 993, 80, 443, 22)
+  - Set up Mail-in-a-Box installation in user data script
+  - Configured S3 backup and storage sync scripts
+
+- Deployed infrastructure:
+  - Created security group: sg-083e89e34b4c5a240
+  - Launched EC2 instance: i-08ed9c5e38eb5abcd (recreated)
+  - Associated Elastic IP: 3.210.30.70
+  - Mail server domain: mail.qolimpact.click
+  - Backup bucket: mail-backup-mail.qolimpact.click
+  - Storage bucket: mail-storage-mail.qolimpact.click
+
+- Fixed Mail-in-a-Box setup issues:
+  - Added user-data user and directory creation
+  - Fixed environment variables script
+  - Added non-interactive mode
+  - Added network checks skip
+  - Fixed script execution with bash instead of ./
+  - Recreated instance with fixed setup
+
+- Fixed user data script issues:
+  - Changed environment variables handling to use variables.env
+  - Added error handling with set -ex
+  - Fixed Mail-in-a-Box setup path
+  - Added DEBIAN_FRONTEND=noninteractive for package installation
+  - Made user creation more robust with || true
+  - Fixed variable interpolation in heredocs 
+
+[2024-03-19 14:30] Instance recreated with fixed user data script
+- Old instance i-08ed9c5e38eb5abcd terminated
+- New instance i-0fc97ae74770fc08e created
+- Elastic IP 3.210.30.70 reassociated
+- Mail server domain remains mail.qolimpact.click 
+
+[2024-03-21] Added environment variable to EC2 user_data template
+- Added environment variable to templatefile call in ec2.tf
+- This variable is used in the user_data.sh.tpl script to fetch SMTP credentials from SSM parameter store
+- Parameters affected: /mail-server/${environment}/smtp-username and /mail-server/${environment}/smtp-password 
+
+March 21, 2024 - Password Management Verification
+- Verified the secure implementation of SMTP credentials in user_data.sh.tpl
+- Confirmed credentials are retrieved from SSM Parameter Store with encryption
+- Parameters used: /mail-server/${environment}/smtp-username and /mail-server/${environment}/smtp-password
+- Local credential files (/etc/postfix/sasl_passwd) are properly secured with 0600 permissions
+- No hardcoded credentials found in the template 
+
+March 21, 2024 - Fixed SES MAIL FROM Domain Configuration
+- Fixed error with SES MAIL FROM domain configuration
+- Changed MAIL FROM domain to bounce.mail.qolimpact.click (subdomain of identity domain)
+- Added required DNS records for MAIL FROM domain:
+  - MX record pointing to feedback-smtp.${aws_region}.amazonses.com
+  - SPF record with v=spf1 include:amazonses.com ~all
+- This change ensures proper bounce handling and email deliverability 
+
+March 21, 2024 - Enhanced SES Configuration
+- Added missing SES domain verification TXT record (_amazonses.mail.qolimpact.click)
+- Enhanced SES Configuration Set with:
+  - Enabled reputation metrics
+  - Required TLS for delivery
+  - Added CloudWatch event destination for tracking email events
+- Identified SES sandbox limitations:
+  - Limited to 200 emails per 24 hours
+  - Can only send to verified email addresses
+  - Both sender and recipient addresses must be verified
+- Next steps:
+  1. Request production access to move out of sandbox
+  2. Verify sender email addresses
+  3. Monitor email sending events in CloudWatch 
+
+[2024-05-27] Fix SES MAIL FROM Domain Creation Error
+- Added depends_on to aws_ses_domain_mail_from in ses.tf to ensure it waits for SES domain identity and verification TXT record.
+- Note: The first terraform apply may still fail if SES domain is not yet verified. Wait for verification, then re-apply. 
+
+[2024-05-27] Mail Server Port Test
+- Created test_mail_ports.sh to check if ports 25, 587, and 993 are open on mail.qolimpact.click.
+- Ran the script. Results:
+  - Port 25: CLOSED
+  - Port 587: CLOSED
+  - Port 993: CLOSED
+- Indicates the mail server is not accessible on these ports from the public internet. Next steps: check EC2 instance firewall, mail server software, and AWS security group settings. 
+
+[2025-05-28] Created README-mailinabox-setup.md: concise instructions for setting up Mail-in-a-Box on a new instance, based on https://mailinabox.email/guide.html. Includes SSH, setup, admin access, DNS, TLS, and maintenance notes.
+[2025-05-28] Added setup_postfix_ses_relay.sh: script to configure Postfix to relay mail through SES using credentials from SSM Parameter Store, following Mail-in-a-Box advanced configuration guide.
+[2025-05-28] Updated README-mailinabox-setup.md: added concise instructions for setting up SMTP relay with SES and reference to the script and official documentation.
+[2025-05-28] Modified setup_postfix_ses_relay.sh to run from local computer, retrieve SMTP credentials from SSM locally, and configure Postfix on remote Mail-in-a-Box server via SSH. Updated README-mailinabox-setup.md to reflect new workflow and SSH configuration steps. 
