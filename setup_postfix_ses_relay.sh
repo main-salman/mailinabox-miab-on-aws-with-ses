@@ -15,7 +15,7 @@ SES_SMTP_PORT=587
 
 # --- REMOTE SERVER CONFIG ---
 REMOTE_USER="ubuntu"  # Change if your instance uses a different user
-REMOTE_HOST="44.208.145.23"  # Set to your Mail-in-a-Box server's IP or hostname
+REMOTE_HOST="52.23.125.143"  # Set to your Mail-in-a-Box server's IP or hostname
 SSH_KEY="salman-test.pem"  # Path to your SSH private key
 
 # --- RETRIEVE SMTP CREDENTIALS FROM SSM (LOCALLY) ---

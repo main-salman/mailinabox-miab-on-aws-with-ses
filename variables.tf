@@ -55,4 +55,16 @@ variable "tags" {
     Environment = "prod"
     ManagedBy   = "terraform"
   }
+}
+
+variable "dmarc_policy" {
+  description = "DMARC policy (e.g., quarantine, reject, none)"
+  type        = string
+  default     = "quarantine"
+}
+
+variable "dmarc_rua_email" {
+  description = "DMARC aggregate report email address"
+  type        = string
+  default     = "postmaster@qolimpact.org"
 } 

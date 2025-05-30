@@ -115,4 +115,56 @@ data "aws_ami" "ubuntu" {
 resource "aws_eip_association" "mail_server" {
   instance_id   = aws_instance.mail_server.id
   allocation_id = aws_eip.mail_server.id
+}
+
+# IAM Role for AWS Backup
+resource "aws_iam_role" "aws_backup" {
+  name = "aws-backup-service-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "backup.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "aws_backup_policy" {
+  role       = aws_iam_role.aws_backup.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+}
+
+# AWS Backup Plan for EC2 instance
+resource "aws_backup_plan" "mail_server_daily" {
+  name = "mail-server-daily-backup"
+
+  rule {
+    rule_name         = "daily-backup"
+    target_vault_name = "Default"
+    schedule          = "cron(0 5 * * ? *)" # Daily at 05:00 UTC (AWS default window)
+    lifecycle {
+      delete_after = 65 # Retention period in days
+    }
+  }
+}
+
+# Update aws_backup_selection to use the new role
+resource "aws_backup_selection" "mail_server" {
+  name         = "mail-server-selection"
+  iam_role_arn = aws_iam_role.aws_backup.arn
+  plan_id      = aws_backup_plan.mail_server_daily.id
+
+  resources = [] # Not used when using selection_tag
+
+  selection_tag {
+    type  = "STRINGEQUALS"
+    key   = "Project"
+    value = "mail-server"
+  }
 } 

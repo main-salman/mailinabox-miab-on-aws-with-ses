@@ -27,8 +27,9 @@
    ```
 7. **Run Mail-in-a-Box setup:**
    ```sh
-   curl -s https://mailinabox.email/setup.sh | sudo -E bash
+   sudo curl -s https://mailinabox.email/setup.sh | sudo -E bash
    ```
+   Note: I had to run " sudo rm /etc/mailinabox.conf" and then "reboot" and then "sudo mailinabox" again becuase it didn't work the first time.
 8. **Access the admin interface:**
    - Go to `https://<mail_subdomain>/admin` in your browser
 9. **(Optional) Set up SMTP relay with SES:**
@@ -144,7 +145,7 @@ curl -s https://mailinabox.email/setup.sh | sudo -E bash
 ```sh
 sudo mailinabox
 ```
-
+Note: I had to run " sudo rm /etc/mailinabox.conf" and then "reboot" and then "sudo mailinabox" again becuase it didn't work the first time.
 ---
 
 ## Setting Up SMTP Relay with Amazon SES (from your local computer)

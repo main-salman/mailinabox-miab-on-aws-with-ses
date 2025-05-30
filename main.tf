@@ -216,4 +216,31 @@ resource "aws_iam_role_policy" "ssm_access" {
 resource "aws_iam_instance_profile" "mail_server" {
   name = "mail-server-profile"
   role = aws_iam_role.mail_server.name
+}
+
+# MX Record for root domain
+resource "aws_route53_record" "root_mx" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = var.domain_name
+  type    = "MX"
+  ttl     = "300"
+  records = ["10 ${var.mail_subdomain}."]
+}
+
+# SPF Record for root domain
+resource "aws_route53_record" "root_spf" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = var.domain_name
+  type    = "TXT"
+  ttl     = "300"
+  records = ["v=spf1 include:${var.mail_subdomain} include:amazonses.com ~all"]
+}
+
+# DMARC Record for root domain
+resource "aws_route53_record" "root_dmarc" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "_dmarc.${var.domain_name}"
+  type    = "TXT"
+  ttl     = "300"
+  records = ["v=DMARC1; p=${var.dmarc_policy}; rua=mailto:${var.dmarc_rua_email}"]
 } 
