@@ -86,7 +86,8 @@ resource "aws_instance" "mail_server" {
   })
 
   tags = merge(var.tags, {
-    Name = "mail-server"
+    Name = "mail-server",
+    Backup = "true"
   })
 }
 
@@ -164,7 +165,7 @@ resource "aws_backup_selection" "mail_server" {
 
   selection_tag {
     type  = "STRINGEQUALS"
-    key   = "Project"
-    value = "mail-server"
+    key   = "Backup"
+    value = "true"
   }
 } 
